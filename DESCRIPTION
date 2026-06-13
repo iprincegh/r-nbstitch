@@ -1,0 +1,38 @@
+Package: nbstitch
+Type: Package
+Title: Topological Repair and Infrastructure Augmentation for Spatial Neighborhood Graphs
+Version: 0.1.0
+Authors@R: c(
+    person(
+      "Prince", "Oppong Boakye",
+      email = "poppongb@uni-muenster.de",
+      role = c("aut", "cre")
+    )
+  )
+Description: Provides a programmatic toolkit to repair and augment fragmented spatial 
+    adjacency neighborhood graphs (specifically 'nb' objects from the 'spdep' 
+    package) to reach a single connected topological component. Ensuring a single 
+    connected component is critical for satisfying the strict mathematical 
+    sum-to-zero constraints required by Bayesian Gaussian Markov Random Field 
+    (GMRF) spatial priors, such as intrinsic CAR or BYM2 models in 'R-INLA'. 
+    Implements a modular multi-stage engineering workflow: injecting 
+    coordinate-based infrastructure edges ('add_wormhole'), running iterative 
+    nearest-neighbor component merging ('sweep_absorp'), and resolving true 
+    spatial isolates ('stitch_island'). Validates coordinate structures to 
+    enforce projected coordinate systems (e.g., UTM), ensuring robust 
+    underlying Euclidean distance metrics.
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    spdep,
+    RANN,
+    igraph,
+    sf
+RoxygenNote: 7.3.3
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: knitr

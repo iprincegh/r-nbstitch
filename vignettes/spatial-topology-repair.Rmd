@@ -1,0 +1,103 @@
+---
+title: "Spatial Topology Repair for Areal Models"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Spatial Topology Repair for Areal Models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+`## The Disconnected Graph Problem
+
+Bayesian spatial disease mapping relies heavily on Conditional Autoregressive (CAR) priors, such as the BYM2 model implemented in `R-INLA`. These models assume that spatial dependence flows through a neighborhood matrix. However, an intrinsic requirement of these Gaussian Markov Random Fields (GMRF) is that the spatial graph must form a **single connected component** to satisfy strict sum-to-zero constraints.
+
+When working at high resolutions (e.g., 100m grids), basic contiguity matrices frequently fracture. Water bodies, parks, and industrial zones split the grid into isolated islands and disconnected sub-graphs. 
+
+The `nbstitch` package provides a programmatic toolkit to iteratively repair these topologies, utilizing infrastructure routing and spatial absorption to force convergence into a single component.
+
+## Setup: A Fragmented Grid
+
+Let's simulate a high-resolution urban environment. We will generate a spatial grid and intentionally remove cells to create a "river" splitting the city, along with an isolated "island" cell.
+
+```{r setup, message=FALSE, warning=FALSE}
+library(sf)
+library(spdep)
+library(nbstitch)
+
+# 1. Generate a 10x10 projected spatial grid (UTM meters)
+grid_sf <- st_make_grid(
+  cellsize = 100, 
+  offset = c(500000, 4500000), 
+  n = c(10, 10)
+) |> st_sf()
+st_crs(grid_sf) <- 32618
+
+# 2. Simulate geographical barriers (a river and an island)
+# Remove a column to split the grid into Left and Right components
+# Keep one isolated cell at the top right to act as an island
+grid_sf$id <- 1:nrow(grid_sf)
+grid_sf <- grid_sf[!(grid_sf$id %in% c(41:50, 99)), ]
+
+# Extract coordinates and build the raw neighborhood graph
+coord <- st_centroid(grid_sf)
+raw_nb <- poly2nb(grid_sf, queen = TRUE)
+
+# Check component count
+g_raw <- igraph::graph_from_adjacency_matrix(nb2mat(raw_nb, style="B", zero.policy=TRUE), mode="undirected")
+igraph::components(g_raw)$no
+```
+
+The raw graph is fractured into 3 distinct components. If we pass this to INLA, it will throw an improper GMRF error.
+
+## The `nbstitch` Pipeline
+
+We can repair this topology using the three-stage `stitch_nb()` pipeline. 
+
+### Stage 1: Infrastructure Wormholes (`add_wormhole`)
+Geographical gaps are often bridged by real-world infrastructure (subways, ferries, bridges). We can manually define these pathways to intelligently stitch major landmasses together.
+
+```{r wormhole}
+# Define a bridge crossing our simulated river
+bridge_link <- data.frame(
+  name = "Main_Bridge",
+  from_x = 500350, from_y = 4500550,
+  to_x   = 500550, to_y   = 4500550
+)
+```
+
+### Stage 2 & 3: Absorption and Island Stitching (`sweep_absorp`, `stitch_island`)
+Once primary infrastructure is defined, `nbstitch` iteratively locates any remaining orphan sub-graphs and isolated zero-neighbor nodes, snapping them to the nearest valid node in the giant component.
+
+### Execution
+
+Instead of running each step manually, we pass the data into the orchestrator function:
+
+```{r execute}
+# Execute the full repair pipeline
+repaired_nb <- stitch_nb(
+  nb = raw_nb,
+  coord = coord,
+  wormhole = bridge_link
+)
+
+# Verify graph health
+summary(repaired_nb)
+```
+
+The graph has successfully converged into a single component! 
+
+## Validation for INLA
+
+Because `nbstitch` outputs a standard `nb` class object, the repaired topology is immediately ready for export to INLA's sparse matrix format.
+
+```{r export, eval=FALSE}
+# Write the repaired graph to a format INLA can ingest
+nb2INLA("repaired_graph.adj", repaired_nb)
+```
