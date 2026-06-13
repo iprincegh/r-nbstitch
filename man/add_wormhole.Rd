@@ -4,7 +4,7 @@
 \alias{add_wormhole}
 \title{Add a Manual Wormhole Edge}
 \usage{
-add_wormhole(nb, wormhole, coord)
+add_wormhole(nb, wormhole, coord, max_dist = 5000)
 }
 \arguments{
 \item{nb}{An nb neighbor list object.}
@@ -12,6 +12,8 @@ add_wormhole(nb, wormhole, coord)
 \item{wormhole}{A 1-row data frame/tibble containing projected metrics: `from_x`, `from_y`, `to_x`, `to_y`.}
 
 \item{coord}{A 2-column matrix of projected grid coordinates (UTM).}
+
+\item{max_dist}{Numeric. Maximum valid distance between anchor and centroid.}
 }
 \value{
 An updated 'nb' object with the added edge.

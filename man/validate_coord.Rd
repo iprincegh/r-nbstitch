@@ -2,19 +2,20 @@
 % Please edit documentation in R/utils.R
 \name{validate_coord}
 \alias{validate_coord}
-\title{Validate Coordinate Projection Matrix or sf Object}
+\title{Validate and Extract Coordinate Projection Matrix}
 \usage{
-validate_coord(coord)
+validate_coord(coord, crs = NULL)
 }
 \arguments{
-\item{coord}{A 2-column numeric matrix or an 'sf' or 'sfc' object.}
+\item{coord}{An 'sf' or 'sfc' object.}
+
+\item{crs}{Optional. Target coordinate reference system (e.g., 3857, 32632).}
 }
 \value{
 A 2-column numeric matrix of validated projected coordinates.
 }
 \description{
-Internal helper to enforce projected coordinate metrics (e.g., UTM),
-check for geodetic unprojected reference systems, and extract 2D coordinate
-matrices from native sf spatial structures automatically.
+Internal helper to handle sf geometries automatically. If unprojected
+data is provided alongside a target CRS, nbstitch does the transformation internally.
 }
 \keyword{internal}

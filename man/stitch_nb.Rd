@@ -2,31 +2,44 @@
 % Please edit documentation in R/stitch_nb.R
 \name{stitch_nb}
 \alias{stitch_nb}
-\alias{summary.stitch_nb}
 \title{Compile Stitched Neighborhood Graph}
 \usage{
-stitch_nb(nb, coord, wormhole = NULL, max_pass = 10)
-
-\method{summary}{stitch_nb}(object, ...)
+stitch_nb(
+  nb,
+  coord,
+  wormhole = NULL,
+  crs = NULL,
+  max_dist = 5000,
+  search_radius = 1000,
+  k_neighbors = 1,
+  max_pass = 10,
+  ...
+)
 }
 \arguments{
-\item{nb}{An 'nb' neighbor list object from the \code{spdep} package.}
+\item{nb}{An 'nb' neighbor list object from the `spdep` package.}
 
-\item{coord}{A 2-column matrix of projected grid centroids (e.g., UTM coordinates).}
+\item{coord}{An 'sf' object containing spatial geometries.}
 
 \item{wormhole}{A data frame containing custom wormhole coordinates, or NULL.}
 
-\item{max_pass}{Maximum absorption sweep loop parameters. Defaults to 10.}
+\item{crs}{Integer/Character. Target CRS (e.g., EPSG code) to automatically project Lat/Lon data.}
 
-\item{object}{An object of class \code{stitch_nb}.}
+\item{max_dist}{Numeric. Maximum distance allowed for an infrastructure edge. Defaults to 5000.}
 
-\item{...}{Additional arguments passed to downstream methods.}
+\item{search_radius}{Numeric. Distance limit for absorption sweeps. Defaults to 1000.}
+
+\item{k_neighbors}{Integer. Number of nearest neighbors to connect for isolated islands. Defaults to 1.}
+
+\item{max_pass}{Integer. Maximum absorption sweep loops. Defaults to 10.}
+
+\item{...}{Additional arguments passed to internal helper functions.}
 }
 \value{
-A custom object of class \code{stitch_nb} containing the fully connected spatial graph.
+A custom object of class `stitch_nb` containing the fully connected spatial graph.
 }
 \description{
 The main orchestrating function that sequentially chains wormhole
-injection, absorption sweeps, and island stitching to ensure a single
-connected spatial topology component.
+injection, absorption sweeps, and island stitching. Handles internal sf extraction
+and projection.
 }

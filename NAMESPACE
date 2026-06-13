@@ -2,6 +2,10 @@
 
 S3method(summary,stitch_nb)
 export(add_wormhole)
+export(stitch_activity)
 export(stitch_island)
 export(stitch_nb)
 export(sweep_absorp)
+importFrom(sf,st_coordinates)
+importFrom(sf,st_is_longlat)
+importFrom(sf,st_transform)

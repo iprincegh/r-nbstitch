@@ -45,8 +45,8 @@ st_crs(grid_sf) <- 32618
 grid_sf$id <- 1:nrow(grid_sf)
 grid_sf <- grid_sf[!(grid_sf$id %in% c(41:50, 99)), ]
 
-# Extract coordinates and build the raw neighborhood graph
-coord <- st_centroid(grid_sf)
+# Extract centroids as an sf object for nbstitch and build the raw neighborhood graph
+centroids_sf <- st_centroid(grid_sf)
 raw_nb <- poly2nb(grid_sf, queen = TRUE)
 
 # Check component count
@@ -70,21 +70,17 @@ bridge_link <- data.frame(
   from_x = 500350, from_y = 4500550,
   to_x   = 500550, to_y   = 4500550
 )
-```
 
-### Stage 2 & 3: Absorption and Island Stitching (`sweep_absorp`, `stitch_island`)
-Once primary infrastructure is defined, `nbstitch` iteratively locates any remaining orphan sub-graphs and isolated zero-neighbor nodes, snapping them to the nearest valid node in the giant component.
-
-### Execution
-
-Instead of running each step manually, we pass the data into the orchestrator function:
-
-```{r execute}
-# Execute the full repair pipeline
+# Execute the full repair pipeline using the Smart API
 repaired_nb <- stitch_nb(
   nb = raw_nb,
-  coord = coord,
-  wormhole = bridge_link
+  coord = centroids_sf,        # Pass the sf object directly
+  crs = 32618,                 # Target CRS (or native CRS)
+  wormhole = bridge_link,      # Stage 1: Inject Infrastructure
+  max_dist = 5000,             # Max allowed infrastructure length
+  search_radius = 1000,        # Stage 2: Absorption search radius
+  k_neighbors = 1,             # Stage 3: Snap remaining islands to 1 neighbor
+  max_pass = 15                # Loop limit for absorption sweeps
 )
 
 # Verify graph health
@@ -92,6 +88,27 @@ summary(repaired_nb)
 ```
 
 The graph has successfully converged into a single component! 
+
+## Advanced: Mobility-Driven Topologies
+`nbstitch` goes beyond standard distance metrics. You can bridge topologically isolated areas by comparing their dynamic temporal activity (e.g., mobile phone visit volumes).
+
+If two disconnected cells exhibit highly correlated human movement patterns over time, stitch_nb can link them logically, regardless of physical barriers.
+
+```{r activity}
+# Simulate a temporal activity matrix (rows = spatial units, columns = time periods)
+# In reality, this would be a dataset of daily POI visits or transit entries.
+set.seed(42)
+mobility_matrix <- matrix(rpois(nrow(grid_sf) * 30, lambda = 10), nrow = nrow(grid_sf), ncol = 30)
+
+# Execute the pipeline with activity-based stitching
+repaired_nb_dynamic <- stitch_nb(
+  nb = raw_nb,
+  coord = centroids_sf,
+  crs = 32618,
+  activity = mobility_matrix, 
+  cor_threshold = 0.60    # Only link isolated cells with a Pearson r >= 0.60
+)
+```
 
 ## Validation for INLA
 

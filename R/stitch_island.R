@@ -20,4 +20,33 @@ stitch_island <- function(nb, coord) {
     nb <- nb_set_edge(nb, isl, nearest_mainland_node)
   }
   return(nb)
+}#' Stitch Isolated Islands
+#' @description Explicitly isolates regions with zero neighbors and forces a topological connection to their nearest mainland counterpart.
+#' @param nb An 'nb' neighbor list object.
+#' @param coord A 2-column matrix of projected grid coordinates (UTM).
+#' @param k_neighbors Integer. Number of nearest mainland nodes to link to.
+#' @return An updated 'nb' object.
+#' @export
+stitch_island <- function(nb, coord, k_neighbors = 1) {
+  cards <- spdep::card(nb)
+  islands <- which(cards == 0)
+
+  if (length(islands) == 0) return(nb)
+
+  mainland <- which(cards > 0)
+  if (length(mainland) == 0) stop("No valid connected components found to snap islands to.")
+
+  for (isl in islands) {
+    # Dynamically find the k-nearest neighbors based on user preference
+    nn <- RANN::nn2(coord[mainland, , drop = FALSE], coord[isl, , drop = FALSE], k = k_neighbors)
+    
+    # Connect the island to all requested neighbors
+    for (idx in 1:k_neighbors) {
+       if (idx <= length(nn$nn.idx)) {
+         nearest_mainland_node <- mainland[nn$nn.idx[idx]]
+         nb <- nb_set_edge(nb, isl, nearest_mainland_node)
+       }
+    }
+  }
+  return(nb)
 }

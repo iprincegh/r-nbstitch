@@ -4,14 +4,16 @@
 \alias{sweep_absorp}
 \title{Sweep Absorption Pass}
 \usage{
-sweep_absorp(nb, coord, max_pass = 10)
+sweep_absorp(nb, coord, max_pass = 10, search_radius = 1000)
 }
 \arguments{
 \item{nb}{An nb neighbor list object.}
 
 \item{coord}{A 2-column matrix of projected grid coordinates (UTM).}
 
-\item{max_pass}{Max allowed graph evaluation loops. Defaults to 10.}
+\item{max_pass}{Integer. Max allowed graph evaluation loops.}
+
+\item{search_radius}{Numeric. Max spatial distance allowed for an absorption link.}
 }
 \value{
 Updated 'nb' object.

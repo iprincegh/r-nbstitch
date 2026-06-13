@@ -4,16 +4,24 @@
 \alias{stitch_island}
 \title{Stitch Isolated Islands}
 \usage{
-stitch_island(nb, coord)
+stitch_island(nb, coord, k_neighbors = 1)
+
+stitch_island(nb, coord, k_neighbors = 1)
 }
 \arguments{
 \item{nb}{An 'nb' neighbor list object.}
 
 \item{coord}{A 2-column matrix of projected grid coordinates (UTM).}
+
+\item{k_neighbors}{Integer. Number of nearest mainland nodes to link to.}
 }
 \value{
 An updated 'nb' object.
+
+An updated 'nb' object.
 }
 \description{
+Explicitly isolates regions with zero neighbors and forces a topological connection to their nearest mainland counterpart.
+
 Explicitly isolates regions with zero neighbors and forces a topological connection to their nearest mainland counterpart.
 }

@@ -13,6 +13,9 @@ nb_set_edge(nb, i, j)
 
 \item{j}{Integer index of second node.}
 }
+\value{
+Updated 'nb' object.
+}
 \description{
 Adds undirected links to an nb list object.
 }
